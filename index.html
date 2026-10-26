@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101a29">
+<title>EcoSphere | 3D Ecosystem Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#101a29;--panel:rgba(25,40,57,.78);--line:rgba(255,255,255,.1);--text:#edf6f5;--muted:#91a6b7;--green:#75e0b0;--cyan:#7dd3fc;--gold:#f6d68b;--rose:#f4a6a0}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:radial-gradient(1200px 700px at 12% -10%,#1b3a4a 0%,transparent 60%),radial-gradient(900px 600px at 100% 110%,#1d3b3a 0%,transparent 55%),var(--bg);background-attachment:fixed;color:var(--text);font-family:'Prompt',system-ui,sans-serif;min-height:100vh}
+button{font:inherit;cursor:pointer;color:inherit}
+button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.app{max-width:1600px;margin:auto;padding:24px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:13px}
+.logo{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#76e4b0,#36a8c8);display:grid;place-items:center;color:#102a31;font-size:26px;box-shadow:0 8px 28px #49c8a533}
+.brand h1{font-size:21px;margin:0;font-weight:600;letter-spacing:-.5px}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.status{display:flex;align-items:center;gap:9px;padding:10px 15px;border:1px solid var(--line);border-radius:30px;background:#ffffff08;color:#b5c8d4;font-size:12px;backdrop-filter:blur(10px)}
+.dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 12px #75e0b0;animation:blink 2.4s ease-in-out infinite}
+@keyframes blink{50%{opacity:.45}}
+.hero{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:0 0 20px}
+.eyebrow{font-size:11px;color:var(--green);letter-spacing:2px;font-weight:600}
+.hero h2{font-size:clamp(25px,3vw,38px);margin:7px 0;font-weight:500;letter-spacing:-1px}
+.hero p{color:var(--muted);font-size:13px;margin:0;line-height:1.8}
+.pill{border:1px solid #75e0b044;border-radius:30px;padding:9px 15px;color:var(--green);font-size:12px;white-space:nowrap;background:#75e0b00a}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,.83fr);gap:20px;align-items:stretch}
+.scene-card,.panel{border:1px solid var(--line);border-radius:24px;background:var(--panel);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);overflow:hidden;box-shadow:0 18px 60px #00000030}
+.scene-card{display:flex;flex-direction:column}
+.scene-head{display:flex;justify-content:space-between;align-items:center;padding:19px 21px;border-bottom:1px solid var(--line);gap:10px}
+.scene-head h3{margin:0;font-size:14px;font-weight:500}
+.scene-head span{font-size:11px;color:var(--muted)}
+.scene-wrap{flex:1 1 auto;min-height:460px;position:relative;background:radial-gradient(ellipse at 50% 40%,#1f4851,#132637 66%,#111d2b);overflow:hidden;touch-action:none}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none}
+.scene-label{position:absolute;top:16px;left:16px;padding:9px 12px;border-radius:12px;background:#0d1c29b8;border:1px solid #ffffff14;font-size:11px;color:#b7d8d8;pointer-events:none;backdrop-filter:blur(8px);z-index:2}
+.scene-label b{color:var(--green);font-weight:500}
+.hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);padding:8px 13px;border-radius:30px;background:#0d1c29c9;border:1px solid #ffffff14;color:#b4c6d3;font-size:10px;white-space:nowrap;pointer-events:none;z-index:2;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
+.hotspots{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:3}
+.hotspot{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
+.hotspot.off{display:none}
+.hs-core{position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;display:grid;place-items:center;pointer-events:auto;background:rgba(13,28,41,.78);border:1.5px solid var(--c);color:var(--c);font-size:11px;font-weight:600;padding:0;backdrop-filter:blur(8px);transition:background .25s,color .25s,transform .25s,box-shadow .25s;box-shadow:0 0 18px color-mix(in srgb,var(--c) 35%,transparent)}
+.hs-core::before{content:'';position:absolute;inset:-5px;border-radius:50%;border:1px solid var(--c);animation:pulse 2.2s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.75);opacity:.8}100%{transform:scale(1.6);opacity:0}}
+.hs-core:hover{transform:translate(-50%,-50%) scale(1.14)}
+.hs-name{position:absolute;left:24px;top:0;transform:translate(-6px,-50%);white-space:nowrap;font-size:11px;padding:5px 10px;border-radius:20px;background:rgba(13,28,41,.86);border:1px solid #ffffff18;color:var(--text);opacity:0;pointer-events:none;transition:.25s}
+.hs-core:hover+.hs-name,.hotspot.sel .hs-name{opacity:1;transform:translate(0,-50%)}
+.hotspot.sel .hs-core{background:var(--c);color:#102a31;transform:translate(-50%,-50%) scale(1.15);box-shadow:0 0 26px color-mix(in srgb,var(--c) 70%,transparent)}
+.pop{position:absolute;left:0;top:0;z-index:5;pointer-events:none;width:min(290px,calc(100% - 20px));will-change:transform}
+.pop-inner{opacity:0;transform:translateY(10px) scale(.96);transform-origin:50% 100%;transition:opacity .3s ease,transform .3s cubic-bezier(.2,.9,.3,1.2);border-radius:16px;padding:14px 15px 15px;background:rgba(14,30,44,.88);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 18px 50px #00000055;position:relative;overflow:hidden}
+.pop-inner::before{content:'';position:absolute;left:0;top:0;right:0;height:2px;background:linear-gradient(90deg,var(--c),transparent)}
+.pop.show{pointer-events:auto}
+.pop.show .pop-inner{opacity:1;transform:none}
+.pop-head{display:flex;align-items:center;gap:11px}
+.pop-emoji{font-size:28px;line-height:1}
+.pop-title{font-size:15px;font-weight:500}
+.pop-group{font-size:10px;color:var(--c);display:flex;align-items:center;gap:5px;margin-top:2px}
+.pop-group i{width:6px;height:6px;border-radius:50%;background:var(--c);display:block}
+.pop-close{margin-left:auto;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:#ffffff08;color:#b7c8d2;font-size:13px;line-height:1;padding:0;align-self:flex-start;transition:.2s}
+.pop-close:hover{border-color:#75e0b077;color:var(--green)}
+.pop-text{font-size:11.5px;line-height:1.85;color:#c4d3db;margin:11px 0 0}
+.scene-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 20px;flex-wrap:wrap;border-top:1px solid var(--line)}
+.legend{display:flex;gap:15px;flex-wrap:wrap;color:var(--muted);font-size:11px}
+.legend span{display:flex;align-items:center;gap:6px}
+.swatch{width:8px;height:8px;border-radius:50%;display:block}
+.controls{display:flex;gap:7px;flex-wrap:wrap}
+.control-btn{border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#ffffff08;color:#c9d8df;font-size:11px;transition:.2s}
+.control-btn:hover,.control-btn.active{border-color:#75e0b077;color:var(--green);background:#75e0b012}
+.panel{padding:22px;display:flex;flex-direction:column;gap:20px}
+.panel-top{display:flex;align-items:center;justify-content:space-between}
+.panel-top h3{font-size:15px;margin:0;font-weight:500}
+.counter{font-size:10px;color:var(--green);background:#75e0b012;border:1px solid #75e0b02a;padding:6px 9px;border-radius:20px}
+.topic-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.topic{border:1px solid var(--line);border-radius:13px;background:#ffffff05;color:#c1d0d8;padding:11px 5px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;transition:.25s;min-width:0}
+.topic .emoji{font-size:23px}
+.topic .topic-name{font-size:10px;white-space:nowrap}
+.topic:hover,.topic.selected{background:#75e0b014;border-color:#75e0b077;color:var(--green);transform:translateY(-2px)}
+.topic.seen::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);opacity:.7}
+.divider{height:1px;background:var(--line)}
+.info-card{--c:var(--green)}
+.info-card.anim{animation:appear .4s ease}
+@keyframes appear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.info-tag{display:inline-flex;align-items:center;gap:6px;color:var(--c);font-size:10px;letter-spacing:.7px;background:#ffffff0d;padding:6px 10px;border-radius:7px;border:1px solid #ffffff10}
+.info-card h3{font-size:24px;font-weight:500;margin:12px 0 7px}
+.info-card .subtitle{font-size:11px;color:var(--c);margin-bottom:14px;letter-spacing:.3px}
+.info-card .description{font-size:12px;line-height:2;color:#bdccd5;margin:0}
+.fact-box{border:1px solid #7dd3fc25;background:linear-gradient(120deg,#7dd3fc0b,#75e0b008);padding:13px;border-radius:13px;margin-top:15px}
+.fact-box strong{display:block;color:var(--cyan);font-size:11px;font-weight:500;margin-bottom:5px}
+.fact-box p{font-size:11px;line-height:1.8;color:#b9cbd6;margin:0}
+.eco-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{padding:12px 9px;border:1px solid var(--line);border-radius:13px;background:#ffffff04}
+.stat .value{font-size:20px;color:var(--green);font-weight:500}
+.stat .label{font-size:10px;color:var(--muted);margin-top:3px}
+.progress{height:4px;border-radius:4px;background:#ffffff10;margin-top:12px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,var(--green),var(--cyan));transition:width .5s ease}
+.learn-btn{width:100%;border:0;border-radius:12px;background:linear-gradient(100deg,#75e0b0,#7dd3fc);color:#102a31;font-size:12px;font-weight:600;padding:13px;transition:.2s;margin-top:auto}
+.learn-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.footer{display:flex;justify-content:space-between;gap:15px;margin-top:18px;color:#758a9b;font-size:10px;line-height:1.8}
+.footer strong{color:#b6c9d2;font-weight:400}
+.toast{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.96);padding:12px 18px;background:#142d3aee;border:1px solid #75e0b055;border-radius:12px;color:var(--green);font-size:12px;opacity:0;pointer-events:none;transition:.3s;z-index:6;text-align:center;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+@media(max-width:900px){.app{padding:18px}.layout{grid-template-columns:1fr}.scene-wrap{flex:none;height:min(78vw,520px);min-height:340px}.panel{gap:17px}.topic-list{grid-template-columns:repeat(6,minmax(0,1fr))}.learn-btn{margin-top:0}}
+@media(max-width:560px){.app{padding:13px}.topbar{margin-bottom:20px}.brand h1{font-size:18px}.status{padding:8px 10px;font-size:10px}.hero{align-items:start;flex-direction:column}.hero h2{font-size:27px}.layout{gap:13px}.scene-card,.panel{border-radius:18px}.scene-head{padding:15px}.scene-wrap{height:380px;min-height:0}.scene-footer{padding:13px}.hint{font-size:9px}.panel{padding:17px}.topic-list{grid-template-columns:repeat(3,minmax(0,1fr))}.footer{flex-direction:column;gap:4px}.hs-core{width:28px;height:28px}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+<div class="brand">
+<div class="logo">✳</div>
+<div><h1>EcoSphere<span style="color:var(--green)">.</span></h1><p>INTERACTIVE LEARNING ENVIRONMENT</p></div>
+</div>
+<div class="status"><span class="dot"></span> 3D EXPERIENCE ACTIVE</div>
+</header>
+<section class="hero">
+<div><div class="eyebrow">SCIENCE · MODULE 01</div><h2>สำรวจโลกของระบบนิเวศ</h2><p>เรียนรู้ความสัมพันธ์ของสิ่งมีชีวิตและสิ่งแวดล้อม ผ่านประสบการณ์สามมิติ</p></div>
+<div class="pill">✦ &nbsp; Explore · Discover · Learn</div>
+</section>
+<main class="layout">
+<section class="scene-card">
+<div class="scene-head"><h3>🌿 &nbsp; Ecosystem Explorer</h3><span>INTERACTIVE 3D MODEL</span></div>
+<div class="scene-wrap" id="sceneWrap">
+<canvas id="scene" aria-label="ฉากจำลองระบบนิเวศสามมิติ"></canvas>
+<div class="hotspots" id="hotspots"></div>
+<div class="pop" id="pop" role="dialog" aria-live="polite">
+<div class="pop-inner" id="popInner">
+<div class="pop-head">
+<span class="pop-emoji" id="popEmoji">🌳</span>
+<div><div class="pop-title" id="popTitle"></div><div class="pop-group"><i></i><span id="popGroup"></span></div></div>
+<button class="pop-close" id="popClose" aria-label="ปิดการ์ดข้อมูล">✕</button>
+</div>
+<p class="pop-text" id="popText"></p>
+</div>
+</div>
+<div class="scene-label">BIOME 01 &nbsp; / &nbsp; <b>ป่าเขตอบอุ่น</b></div>
+<div class="hint">คลิกจุดเรืองแสงหรือวัตถุเพื่อสำรวจ · ลากเพื่อหมุน · Scroll เพื่อซูม · คลิกขวาลากเพื่อแพน</div>
+<div class="toast" id="toast">เลือกวัตถุเพื่อเรียนรู้</div>
+</div>
+<div class="scene-footer">
+<div class="legend">
+<span><i class="swatch" style="background:#79dfa8"></i>ผู้ผลิต</span>
+<span><i class="swatch" style="background:#f6d68b"></i>ผู้บริโภค</span>
+<span><i class="swatch" style="background:#f4a6a0"></i>ผู้ย่อยสลาย</span>
+<span><i class="swatch" style="background:#7dd3fc"></i>สิ่งไม่มีชีวิต</span>
+</div>
+<div class="controls">
+<button class="control-btn" id="flowBtn">⇢ การถ่ายทอดพลังงาน</button>
+<button class="control-btn" id="resetBtn">↺ รีเซ็ตมุมมอง</button>
+<button class="control-btn active" id="rotateBtn">◉ หมุนอัตโนมัติ</button>
+</div>
+</div>
+</section>
+<aside class="panel">
+<div class="panel-top"><h3>ค้นพบองค์ประกอบ</h3><span class="counter" id="counter">01 / 06</span></div>
+<div class="topic-list" id="topicList">
+<button class="topic selected" data-id="tree"><span class="emoji">🌳</span><span class="topic-name">ต้นไม้</span></button>
+<button class="topic" data-id="deer"><span class="emoji">🦌</span><span class="topic-name">กวาง</span></button>
+<button class="topic" data-id="bird"><span class="emoji">🐦</span><span class="topic-name">นก</span></button>
+<button class="topic" data-id="water"><span class="emoji">💧</span><span class="topic-name">แหล่งน้ำ</span></button>
+<button class="topic" data-id="sun"><span class="emoji">☀️</span><span class="topic-name">แสงอาทิตย์</span></button>
+<button class="topic" data-id="mushroom"><span class="emoji">🍄</span><span class="topic-name">ผู้ย่อยสลาย</span></button>
+</div>
+<div class="divider"></div>
+<div class="info-card" id="infoCard">
+<div class="info-tag"><span>✦</span> ECOSYSTEM INSIGHT</div>
+<h3 id="infoTitle">ต้นไม้</h3>
+<div class="subtitle" id="infoSubtitle">PRODUCER · ผู้ผลิต</div>
+<p class="description" id="infoDescription"></p>
+<div class="fact-box"><strong>💡 รู้หรือไม่?</strong><p id="infoFact"></p></div>
+</div>
+<div class="divider"></div>
+<div>
+<div class="panel-top" style="margin-bottom:12px"><h3>ภาพรวมระบบนิเวศ</h3><span style="font-size:10px;color:var(--muted)">KEY INDICATORS</span></div>
+<div class="eco-stats">
+<div class="stat"><div class="value">06</div><div class="label">องค์ประกอบ</div></div>
+<div class="stat"><div class="value">04</div><div class="label">กลุ่มหลัก</div></div>
+<div class="stat"><div class="value" id="statFound">1/6</div><div class="label">สำรวจแล้ว</div></div>
+</div>
+<div class="progress"><i id="progressBar"></i></div>
+</div>
+<button class="learn-btn" id="nextBtn">สำรวจองค์ประกอบถัดไป &nbsp; →</button>
+</aside>
+</main>
+<footer class="footer"><span><strong>EcoSphere Learning Lab</strong> · สื่อการเรียนรู้วิทยาศาสตร์เชิงโต้ตอบ</span><span>หมุนโมเดลได้อย่างอิสระเพื่อสำรวจระบบนิเวศ</span></footer>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+'use strict';
+const canvas=document.getElementById('scene');
+const wrap=document.getElementById('sceneWrap');
+const toast=document.getElementById('toast');
+const hotspotLayer=document.getElementById('hotspots');
+const pop=document.getElementById('pop');
+const infoCard=document.getElementById('infoCard');
+
+const groups={
+producer:{label:'ผู้ผลิต',color:'#79dfa8'},
+consumer:{label:'ผู้บริโภค',color:'#f6d68b'},
+decomposer:{label:'ผู้ย่อยสลาย',color:'#f4a6a0'},
+abiotic:{label:'ปัจจัยไม่มีชีวิต',color:'#7dd3fc'}
+};
+
+const data={
+tree:{title:'ต้นไม้',subtitle:'PRODUCER · ผู้ผลิต',group:'producer',emoji:'🌳',
+short:'ต้นไม้สร้างอาหารเองได้ด้วยการสังเคราะห์ด้วยแสง และเป็นจุดเริ่มต้นของห่วงโซ่อาหาร',
+description:'ต้นไม้เป็นผู้ผลิตในระบบนิเวศ สามารถสร้างอาหารด้วยกระบวนการสังเคราะห์ด้วยแสง โดยใช้พลังงานจากดวงอาทิตย์ น้ำ และก๊าซคาร์บอนไดออกไซด์',
+fact:'พืชเป็นจุดเริ่มต้นสำคัญของห่วงโซ่อาหาร เพราะเปลี่ยนพลังงานแสงให้เป็นพลังงานเคมีที่สิ่งมีชีวิตอื่นนำไปใช้ได้',
+anchor:[-3.2,3.15,.6],focus:[-2.6,1.3,.8],dist:9.5,ring:{pos:[-3.2,.04,.6],size:1.6,billboard:false}},
+deer:{title:'กวาง',subtitle:'PRIMARY CONSUMER · ผู้บริโภคอันดับหนึ่ง',group:'consumer',emoji:'🦌',
+short:'กวางกินพืชเป็นอาหาร จึงรับพลังงานต่อจากผู้ผลิต และเป็นอาหารของผู้ล่าในระบบนิเวศ',
+description:'กวางเป็นสัตว์กินพืช จึงได้รับพลังงานจากการกินใบไม้ หญ้า และพืชชนิดต่าง ๆ กวางยังเป็นอาหารของผู้ล่าและช่วยรักษาสมดุลของประชากรพืช',
+fact:'การกินพืชและการกระจายเมล็ดพันธุ์ของสัตว์กินพืชมีส่วนช่วยในการฟื้นฟูป่า',
+anchor:[1,1.85,-.3],focus:[1.2,.7,-.2],dist:6.8,ring:{pos:[1.2,.04,-.2],size:1.25,billboard:false}},
+bird:{title:'นก',subtitle:'CONSUMER · ผู้บริโภค',group:'consumer',emoji:'🐦',
+short:'นกกินแมลง ผลไม้ หรือเหยื่อขนาดเล็ก ช่วยกระจายเมล็ดพันธุ์และควบคุมประชากรแมลง',
+description:'นกมีบทบาทหลากหลายในระบบนิเวศ บางชนิดกินแมลง บางชนิดกินผลไม้ และบางชนิดล่าเหยื่อ นกหลายชนิดช่วยกระจายเมล็ดพันธุ์และควบคุมประชากรแมลง',
+fact:'เมล็ดพืชที่ติดไปกับนกหรือผ่านทางมูลนกสามารถงอกในพื้นที่ใหม่และเพิ่มความหลากหลายของป่า',
+anchor:[-1.8,3.55,.4],focus:[-1.8,2.9,.5],dist:7.5,ring:{pos:[-1.8,3.05,.4],size:.55,billboard:true}},
+water:{title:'แหล่งน้ำ',subtitle:'ABIOTIC FACTOR · ปัจจัยไม่มีชีวิต',group:'abiotic',emoji:'💧',
+short:'น้ำจำเป็นต่อการดำรงชีวิต การสังเคราะห์ด้วยแสง และเป็นที่อยู่อาศัยของสิ่งมีชีวิตหลากหลายชนิด',
+description:'น้ำเป็นทรัพยากรสำคัญสำหรับสิ่งมีชีวิต ใช้ในการดำรงชีวิต การสังเคราะห์ด้วยแสง และการขนส่งสารอาหาร แหล่งน้ำยังเป็นที่อยู่อาศัยของสิ่งมีชีวิตหลากหลายชนิด',
+fact:'การเปลี่ยนแปลงคุณภาพและปริมาณน้ำอาจส่งผลต่อสิ่งมีชีวิตทั่วทั้งระบบนิเวศ',
+anchor:[.3,.65,-2.15],focus:[.2,0,-2.1],dist:10,ring:{pos:[.2,.1,-2.1],size:2.4,billboard:false}},
+sun:{title:'แสงอาทิตย์',subtitle:'ENERGY SOURCE · แหล่งพลังงาน',group:'abiotic',emoji:'☀️',
+short:'ดวงอาทิตย์เป็นแหล่งพลังงานหลัก พืชใช้พลังงานแสงสร้างอาหารแล้วถ่ายทอดสู่สิ่งมีชีวิตอื่น',
+description:'ดวงอาทิตย์เป็นแหล่งพลังงานหลักของระบบนิเวศ พืชใช้พลังงานแสงในกระบวนการสังเคราะห์ด้วยแสง ก่อนที่พลังงานจะถ่ายทอดไปยังผู้บริโภคผ่านห่วงโซ่อาหาร',
+fact:'พลังงานจะลดลงในแต่ละลำดับขั้นของห่วงโซ่อาหาร ส่วนหนึ่งถูกใช้ในการดำรงชีวิตและสูญเสียเป็นความร้อน',
+anchor:[-3.8,5.35,-3],focus:[-3.2,4.2,-2.4],dist:12,ring:{pos:[-3.8,4.5,-3],size:.95,billboard:true}},
+mushroom:{title:'เห็ดและผู้ย่อยสลาย',subtitle:'DECOMPOSER · ผู้ย่อยสลาย',group:'decomposer',emoji:'🍄',
+short:'เห็ดและจุลินทรีย์ย่อยสลายซากสิ่งมีชีวิต คืนสารอาหารสู่ดินให้พืชนำกลับไปใช้ใหม่',
+description:'เห็ดและจุลินทรีย์ช่วยย่อยสลายซากสิ่งมีชีวิตและของเสีย ให้กลายเป็นสารอาหารที่กลับคืนสู่ดิน ทำให้สารต่าง ๆ หมุนเวียนกลับมาใช้ใหม่ในระบบนิเวศ',
+fact:'หากไม่มีผู้ย่อยสลาย ซากอินทรียวัตถุจะสะสมและการหมุนเวียนสารอาหารในระบบนิเวศจะถูกรบกวน',
+anchor:[-2.15,.95,1.3],focus:[-2.2,.2,1.3],dist:5.6,ring:{pos:[-2.2,.04,1.3],size:.85,billboard:false}}
+};
+
+const flowPts={
+sun:[-3.8,4.4,-3],
+water:[.2,.5,-2.1],
+tree:[-3.2,2.4,.6],
+deer:[1,1.5,-.3],
+bird:[-1.8,3.2,.4],
+mushroom:[-2.2,.5,1.3]
+};
+
+const ids=Object.keys(data);
+const discovered=new Set();
+const pickables=[];
+const animTrees=[];
+const animBirds=[];
+const animDeer=[];
+const ripples=[];
+const flowDots=[];
+const hotspotEls={};
+const anchors={};
+const tmpV=new THREE.Vector3();
+const clock=new THREE.Clock();
+const cam={active:false,start:0,dur:1.2,fp:null,tp:null,ft:null,tt:null};
+let selected='tree';
+let scene,camera,renderer,controls,raycaster,mouse;
+let autoRotate=true;
+let interacting=false;
+let popOpen=false;
+let completed=false;
+let flowOn=false;
+let flowGroup=null;
+let sunObj=null;
+let waterMat=null;
+let pollen=null;
+let ringMesh=null;
+let ringCfg=null;
+let downPos=null;
+let W=1,H=1;
+let hoverTick=0;
+let toastTimer;
+
+function mat(color,roughness,metalness){
+return new THREE.MeshStandardMaterial({color:color,roughness:roughness===undefined?.8:roughness,metalness:metalness||0});
+}
+
+function addMesh(geometry,material,x,y,z,parent,topic){
+const mesh=new THREE.Mesh(geometry,material);
+mesh.position.set(x,y,z);
+mesh.castShadow=true;
+mesh.receiveShadow=true;
+if(topic){mesh.userData.topic=topic;pickables.push(mesh)}
+(parent||scene).add(mesh);
+return mesh;
+}
+
+function group(x,y,z,topic,parent){
+const g=new THREE.Group();
+g.position.set(x,y,z);
+g.userData.topic=topic;
+(parent||scene).add(g);
+return g;
+}
+
+function addTree(x,z,scale){
+const g=group(x,0,z,'tree');
+addMesh(new THREE.CylinderGeometry(.13*scale,.2*scale,1.3*scale,9),mat('#8c6042'),0,.65*scale,0,g,'tree');
+const colors=['#347f61','#398d68','#4ba878','#286d55'];
+[[0,1.65,0,.76],[.12,2.05,0,.62],[-.1,2.4,.02,.45]].forEach(function(v,i){
+const crown=addMesh(new THREE.IcosahedronGeometry(v[3]*scale,1),mat(colors[i%colors.length]),v[0]*scale,v[1]*scale,v[2]*scale,g,'tree');
+crown.scale.y=1.15;
+});
+animTrees.push({g:g,phase:x*1.7+z});
+}
+
+function addBush(x,z,s){
+const g=group(x,.1,z,'tree');
+[[0,.25,0],[.24,.2,.05],[-.22,.18,0]].forEach(function(p,i){
+addMesh(new THREE.IcosahedronGeometry(.3*s,1),mat(['#3c8a5d','#55a76d','#347e55'][i]),p[0],p[1],p[2],g,'tree');
+});
+}
+
+function addRock(x,z,s,topic){
+const m=addMesh(new THREE.DodecahedronGeometry(.35*s,0),mat('#718b91',.95),x,.16*s,z,scene,topic);
+m.scale.set(1.3,.7,1);
+m.rotation.set(.2,.5,.15);
+}
+
+function addFlower(x,z){
+const g=group(x,0,z,'tree');
+addMesh(new THREE.CylinderGeometry(.018,.025,.27,6),mat('#70bd75'),0,.13,0,g,'tree');
+for(let i=0;i<5;i++){
+const a=i*Math.PI*2/5;
+addMesh(new THREE.SphereGeometry(.055,8,8),mat(i%2?'#f4c6da':'#f3a7b7'),Math.cos(a)*.065,.31,Math.sin(a)*.065,g,'tree');
+}
+addMesh(new THREE.SphereGeometry(.04,8,8),mat('#f6d68b'),0,.31,0,g,'tree');
+}
+
+function addDeer(x,z,s,rotY,phase){
+const g=group(x,0,z,'deer');
+g.scale.setScalar(s);
+g.rotation.y=rotY;
+const body=mat('#c99b64');
+const dark=mat('#9c714c');
+addMesh(new THREE.SphereGeometry(.42,16,12),body,0,.75,0,g,'deer').scale.set(1.25,.85,.72);
+addMesh(new THREE.SphereGeometry(.09,10,8),mat('#f1e4cf'),-.5,.82,0,g,'deer');
+const neck=addMesh(new THREE.CylinderGeometry(.1,.15,.5,10),body,.3,.9,0,g,'deer');
+neck.rotation.z=-.55;
+const head=group(.46,1.12,0,'deer',g);
+addMesh(new THREE.SphereGeometry(.2,12,10),body,0,0,.0,head,'deer').scale.set(1,.95,.8);
+const muzzle=addMesh(new THREE.ConeGeometry(.11,.36,10),mat('#d9b184'),.2,-.05,0,head,'deer');
+muzzle.rotation.z=-Math.PI/2;
+addMesh(new THREE.SphereGeometry(.03,8,8),mat('#20252c'),.2,.06,.1,head,'deer');
+addMesh(new THREE.SphereGeometry(.03,8,8),mat('#20252c'),.2,.06,-.1,head,'deer');
+addMesh(new THREE.SphereGeometry(.035,8,8),mat('#20252c'),.37,-.04,0,head,'deer');
+[.13,-.13].forEach(function(z){
+const ear=addMesh(new THREE.ConeGeometry(.06,.2,8),mat('#b97e52'),-.08,.2,z,head,'deer');
+ear.rotation.x=z>0?-.6:.6;
+ear.rotation.z=.3;
+});
+const antlerMat=mat('#d8c3a1');
+[.09,-.09].forEach(function(z){
+const base=addMesh(new THREE.CylinderGeometry(.018,.027,.3,6),antlerMat,-.02,.34,z,head,'deer');
+base.rotation.z=-.25;
+const tine=addMesh(new THREE.CylinderGeometry(.012,.02,.18,6),antlerMat,.05,.5,z,head,'deer');
+tine.rotation.z=-.8;
+const tine2=addMesh(new THREE.CylinderGeometry(.01,.018,.14,6),antlerMat,-.05,.44,z,head,'deer');
+tine2.rotation.z=.7;
+});
+[[-.28,-.2],[-.28,.2],[.28,-.2],[.28,.2]].forEach(function(p){
+addMesh(new THREE.CylinderGeometry(.055,.04,.5,8),dark,p[0],.27,p[1],g,'deer');
+addMesh(new THREE.CylinderGeometry(.045,.05,.06,8),mat('#3a2c24'),p[0],.02,p[1],g,'deer');
+});
+animDeer.push({head:head,phase:phase,base:head.position.y});
+}
+
+function addBird(x,y,z,phase){
+const g=group(x,y,z,'bird');
+g.scale.setScalar(1.35);
+addMesh(new THREE.SphereGeometry(.17,12,10),mat('#e7b86d'),0,0,0,g,'bird').scale.set(1.25,.8,.85);
+addMesh(new THREE.SphereGeometry(.11,12,10),mat('#f4d5a0'),.16,.11,0,g,'bird');
+addMesh(new THREE.SphereGeometry(.018,6,6),mat('#20252c'),.23,.15,.07,g,'bird');
+addMesh(new THREE.SphereGeometry(.018,6,6),mat('#20252c'),.23,.15,-.07,g,'bird');
+addMesh(new THREE.ConeGeometry(.05,.2,8),mat('#e58c50'),.29,.1,0,g,'bird').rotation.z=-Math.PI/2;
+addMesh(new THREE.ConeGeometry(.06,.26,6),mat('#c9985a'),-.27,-.01,0,g,'bird').rotation.z=Math.PI/2+.2;
+const wings=[];
+[-1,1].forEach(function(s){
+const wing=addMesh(new THREE.SphereGeometry(.12,10,8),mat('#8bb9b2'),-.02,.04,s*.14,g,'bird');
+wing.scale.set(1.2,.35,.65);
+wings.push({m:wing,s:s});
+});
+animBirds.push({g:g,baseY:y,phase:phase,wings:wings});
+}
+
+function addMushroom(x,z,s){
+const g=group(x,0,z,'mushroom');
+g.scale.setScalar(s);
+addMesh(new THREE.CylinderGeometry(.07,.11,.24,10),mat('#e9d6b8'),0,.12,0,g,'mushroom');
+addMesh(new THREE.SphereGeometry(.2,12,8,0,Math.PI*2,0,Math.PI/2),mat('#d96865'),0,.26,0,g,'mushroom').scale.set(1,1,.85);
+for(let i=0;i<5;i++){
+const a=i*1.26;
+addMesh(new THREE.SphereGeometry(.025,6,6),mat('#fff1db'),Math.cos(a)*.12,.34,Math.sin(a)*.12,g,'mushroom');
+}
+}
+
+function addSun(){
+const g=group(-3.8,4.5,-3,'sun');
+addMesh(new THREE.SphereGeometry(.42,24,24),new THREE.MeshBasicMaterial({color:'#ffe5a0'}),0,0,0,g,'sun');
+const glow=addMesh(new THREE.SphereGeometry(.64,24,24),new THREE.MeshBasicMaterial({color:'#ffc86d',transparent:true,opacity:.14,depthWrite:false}),0,0,0,g,'sun');
+glow.castShadow=false;
+const rays=new THREE.Group();
+g.add(rays);
+for(let i=0;i<12;i++){
+const a=i*Math.PI/6;
+const ray=new THREE.Mesh(new THREE.BoxGeometry(.045,.2,.045),new THREE.MeshBasicMaterial({color:'#f6d68b'}));
+ray.position.set(Math.cos(a)*.6,Math.sin(a)*.6,0);
+ray.rotation.z=a-Math.PI/2;
+rays.add(ray);
+}
+sunObj={g:g,rays:rays,glow:glow};
+}
+
+function addWater(){
+const shape=new THREE.Shape();
+shape.moveTo(-4.3,3.05);
+shape.bezierCurveTo(-3,3.6,-1.5,2.4,0,2.95);
+shape.bezierCurveTo(1.5,3.45,3,2.6,4.3,3.05);
+shape.lineTo(4.3,1.45);
+shape.bezierCurveTo(3,.95,1.5,1.7,0,1.3);
+shape.bezierCurveTo(-1.5,.9,-3,1.9,-4.3,1.5);
+shape.closePath();
+waterMat=new THREE.MeshStandardMaterial({color:'#3c9fb3',roughness:.2,metalness:.1,transparent:true,opacity:.9,side:THREE.DoubleSide});
+const water=new THREE.Mesh(new THREE.ShapeGeometry(shape,32),waterMat);
+water.rotation.x=-Math.PI/2;
+water.position.set(0,.05,0);
+water.receiveShadow=true;
+water.userData.topic='water';
+pickables.push(water);
+scene.add(water);
+[[-1.6,-2.2,0],[1.2,-2.4,.33],[2.9,-2.0,.66],[-3,-2.1,.5]].forEach(function(p){
+const r=new THREE.Mesh(new THREE.RingGeometry(.7,.8,40),new THREE.MeshBasicMaterial({color:'#d9f6ff',transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+r.rotation.x=-Math.PI/2;
+r.position.set(p[0],.09,p[1]);
+scene.add(r);
+ripples.push({m:r,off:p[2]});
+});
+}
+
+function addGround(){
+addMesh(new THREE.CylinderGeometry(5.5,5.7,.3,64),mat('#315c4a'),0,-.19,0,scene,null);
+addMesh(new THREE.CylinderGeometry(5.65,5.7,.15,64),mat('#5a755c'),0,-.38,0,scene,null);
+const ground=addMesh(new THREE.CircleGeometry(5.4,64),mat('#476b50'),0,-.025,0,scene,null);
+ground.rotation.x=-Math.PI/2;
+}
+
+function addSceneDecor(){
+for(let i=0;i<46;i++){
+const a=i*2.399;
+const r=1.4+(i%9)*.45;
+const x=Math.cos(a)*r,z=Math.sin(a)*r;
+if(x*x+z*z>26)continue;
+if(z<-.7&&z>-3.5)continue;
+addMesh(new THREE.SphereGeometry(.035+(i%3)*.018,6,6),mat(i%2?'#9dc47d':'#d2b98a'),x,.02,z,scene,null);
+}
+for(let i=0;i<9;i++){
+addFlower(-.2+(i%3)*.38,1.7+Math.floor(i/3)*.34);
+}
+for(let i=0;i<5;i++){
+addFlower(3.2+(i%2)*.3,-.1+Math.floor(i/2)*.32);
+}
+}
+
+function addPollen(){
+const n=110;
+const pos=new Float32Array(n*3);
+for(let i=0;i<n;i++){
+const a=Math.random()*Math.PI*2;
+const r=Math.sqrt(Math.random())*4.6;
+pos[i*3]=Math.cos(a)*r;
+pos[i*3+1]=.3+Math.random()*3.4;
+pos[i*3+2]=Math.sin(a)*r;
+}
+const geo=new THREE.BufferGeometry();
+geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+pollen=new THREE.Points(geo,new THREE.PointsMaterial({color:'#fff0b0',size:.07,transparent:true,opacity:.7,depthWrite:false,sizeAttenuation:true}));
+scene.add(pollen);
+}
+
+function buildFlow(){
+flowGroup=new THREE.Group();
+flowGroup.visible=false;
+scene.add(flowGroup);
+const dotGeo=new THREE.SphereGeometry(.07,10,10);
+const edges=[
+['sun','tree','#ffd780'],
+['water','tree','#7dd3fc'],
+['tree','deer','#79dfa8'],
+['tree','bird','#79dfa8'],
+['deer','mushroom','#f4a6a0'],
+['bird','mushroom','#f4a6a0'],
+['tree','mushroom','#f4a6a0']
+];
+edges.forEach(function(e,i){
+const a=new THREE.Vector3().fromArray(flowPts[e[0]]);
+const b=new THREE.Vector3().fromArray(flowPts[e[1]]);
+const mid=a.clone().add(b).multiplyScalar(.5);
+mid.y+=1+a.distanceTo(b)*.14;
+const curve=new THREE.QuadraticBezierCurve3(a,mid,b);
+const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(48)),new THREE.LineBasicMaterial({color:e[2],transparent:true,opacity:.5}));
+flowGroup.add(line);
+for(let k=0;k<3;k++){
+const dot=new THREE.Mesh(dotGeo,new THREE.MeshBasicMaterial({color:e[2]}));
+flowGroup.add(dot);
+flowDots.push({mesh:dot,curve:curve,off:k/3+i*.13});
+}
+});
+}
+
+function buildRing(){
+ringMesh=new THREE.Mesh(new THREE.RingGeometry(.88,1,64),new THREE.MeshBasicMaterial({color:'#75e0b0',transparent:true,opacity:.85,side:THREE.DoubleSide,depthWrite:false}));
+ringMesh.renderOrder=5;
+scene.add(ringMesh);
+}
+
+function setRing(id){
+const c=data[id].ring;
+ringCfg=c;
+ringMesh.position.set(c.pos[0],c.pos[1],c.pos[2]);
+if(!c.billboard)ringMesh.rotation.set(-Math.PI/2,0,0);
+ringMesh.material.color.set(groups[data[id].group].color);
+}
+
+function buildHotspots(){
+ids.forEach(function(id,i){
+const d=data[id];
+const el=document.createElement('div');
+el.className='hotspot off';
+el.style.setProperty('--c',groups[d.group].color);
+const btn=document.createElement('button');
+btn.className='hs-core';
+btn.type='button';
+btn.setAttribute('aria-label',d.title);
+btn.textContent=String(i+1);
+btn.addEventListener('click',function(e){e.stopPropagation();selectTopic(id)});
+const name=document.createElement('span');
+name.className='hs-name';
+name.textContent=d.emoji+' '+d.title;
+el.appendChild(btn);
+el.appendChild(name);
+hotspotLayer.appendChild(el);
+hotspotEls[id]=el;
+anchors[id]=new THREE.Vector3().fromArray(d.anchor);
+});
+}
+
+function init(){
+if(!window.THREE||!THREE.OrbitControls){
+showToast('โหลดไลบรารีไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ต',true);
+return;
+}
+try{
+renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:false});
+}catch(err){
+showToast('อุปกรณ์นี้ไม่รองรับ WebGL',true);
+return;
+}
+scene=new THREE.Scene();
+scene.background=new THREE.Color('#172c3a');
+scene.fog=new THREE.Fog('#172c3a',13,28);
+camera=new THREE.PerspectiveCamera(43,1,.1,100);
+camera.position.set(8,7,10);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.15;
+
+scene.add(new THREE.AmbientLight('#d3e8ff',.55));
+scene.add(new THREE.HemisphereLight('#bfe3ff','#3a5a48',.5));
+const sunLight=new THREE.DirectionalLight('#ffe2b3',2.1);
+sunLight.position.set(-4,9,5);
+sunLight.castShadow=true;
+sunLight.shadow.mapSize.set(2048,2048);
+sunLight.shadow.camera.left=-9;
+sunLight.shadow.camera.right=9;
+sunLight.shadow.camera.top=9;
+sunLight.shadow.camera.bottom=-9;
+sunLight.shadow.camera.near=1;
+sunLight.shadow.camera.far=30;
+sunLight.shadow.bias=-.0005;
+sunLight.shadow.normalBias=.02;
+scene.add(sunLight);
+const fill=new THREE.DirectionalLight('#79cce5',.65);
+fill.position.set(5,4,-6);
+scene.add(fill);
+
+controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.dampingFactor=.055;
+controls.enablePan=true;
+controls.screenSpacePanning=true;
+controls.minDistance=4;
+controls.maxDistance=22;
+controls.maxPolarAngle=Math.PI*.49;
+controls.autoRotateSpeed=.5;
+controls.target.set(0,.5,0);
+controls.addEventListener('start',function(){interacting=true;cam.active=false});
+controls.addEventListener('end',function(){interacting=false});
+
+raycaster=new THREE.Raycaster();
+mouse=new THREE.Vector2();
+
+addGround();
+addWater();
+addTree(-3.2,.6,1.15);
+addTree(-3.7,2.3,.8);
+addTree(-1.8,3,.75);
+addTree(3.3,1.7,.85);
+addTree(3.9,.1,.65);
+addTree(2.4,3.2,.7);
+addBush(-.7,.4,.9);
+addBush(2.7,-.3,.75);
+addBush(.1,2.9,.7);
+addRock(-1.3,-1,.8,'water');
+addRock(1.9,-1.1,.7,'water');
+addRock(3,-2.6,.6,'water');
+addRock(-2.7,-2.1,.5,'water');
+addDeer(1.2,-.2,1,Math.PI/2,0);
+addDeer(2.1,.35,.62,1.2,1.7);
+addBird(-1.8,3,.4,0);
+addBird(1.3,3.3,1.9,2.1);
+addMushroom(-2.4,1.25,1.5);
+addMushroom(-2,1.05,1.2);
+addMushroom(-2.2,1.5,1);
+addSun();
+addSceneDecor();
+addPollen();
+buildFlow();
+buildRing();
+buildHotspots();
+
+const floorRing=new THREE.Mesh(new THREE.TorusGeometry(5.52,.035,8,100),new THREE.MeshBasicMaterial({color:'#75e0b0',transparent:true,opacity:.35}));
+floorRing.rotation.x=Math.PI/2;
+floorRing.position.y=-.025;
+scene.add(floorRing);
+
+resize();
+if(window.ResizeObserver){new ResizeObserver(resize).observe(wrap)}
+window.addEventListener('resize',resize);
+
+canvas.addEventListener('pointerdown',function(e){
+if(e.button===0)downPos={x:e.clientX,y:e.clientY};
+});
+window.addEventListener('pointerup',function(e){
+if(!downPos)return;
+const dx=e.clientX-downPos.x,dy=e.clientY-downPos.y;
+downPos=null;
+if(dx*dx+dy*dy>36||e.target!==canvas)return;
+const id=pickAt(e);
+if(id)selectTopic(id);
+else if(popOpen)closePop();
+});
+canvas.addEventListener('pointermove',function(e){
+if(downPos||e.pointerType==='touch')return;
+const now=performance.now();
+if(now-hoverTick<60)return;
+hoverTick=now;
+canvas.style.cursor=pickAt(e)?'pointer':'grab';
+});
+document.getElementById('resetBtn').addEventListener('click',resetCamera);
+document.getElementById('rotateBtn').addEventListener('click',toggleRotate);
+document.getElementById('flowBtn').addEventListener('click',toggleFlow);
+document.getElementById('nextBtn').addEventListener('click',nextTopic);
+document.getElementById('popClose').addEventListener('click',closePop);
+document.querySelectorAll('.topic').forEach(function(b){b.addEventListener('click',function(){selectTopic(b.dataset.id)})});
+window.addEventListener('keydown',function(e){
+if(e.key==='ArrowRight')nextTopic();
+else if(e.key==='ArrowLeft')prevTopic();
+else if(e.key==='Escape')closePop();
+});
+
+selectTopic('tree',{silent:true});
+renderer.setAnimationLoop(animate);
+}
+
+function resize(){
+if(!renderer||!camera)return;
+W=Math.max(wrap.clientWidth,1);
+H=Math.max(wrap.clientHeight,1);
+renderer.setSize(W,H,false);
+camera.aspect=W/H;
+camera.updateProjectionMatrix();
+}
+
+function pickAt(e){
+const rect=canvas.getBoundingClientRect();
+mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
+mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+raycaster.setFromCamera(mouse,camera);
+const hits=raycaster.intersectObjects(pickables,false);
+for(let i=0;i<hits.length;i++){
+const m=hits[i].object;
+if(m.visible&&m.userData.topic)return m.userData.topic;
+}
+return null;
+}
+
+function updateHotspots(){
+for(let i=0;i<ids.length;i++){
+const id=ids[i];
+const el=hotspotEls[id];
+tmpV.copy(anchors[id]).project(camera);
+const vis=tmpV.z<1&&tmpV.z>-1&&Math.abs(tmpV.x)<1.1&&Math.abs(tmpV.y)<1.1;
+el.classList.toggle('off',!vis);
+if(!vis){el._sx=null;continue}
+const x=(tmpV.x*.5+.5)*W;
+const y=(-tmpV.y*.5+.5)*H;
+el._sx=x;
+el._sy=y;
+el.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0)';
+}
+if(popOpen){
+const el=hotspotEls[selected];
+if(el._sx===null||el._sx===undefined){
+pop.style.visibility='hidden';
+}else{
+pop.style.visibility='visible';
+const pw=pop.offsetWidth,ph=pop.offsetHeight;
+let x=Math.min(Math.max(el._sx-pw/2,10),Math.max(W-pw-10,10));
+let y=el._sy-ph-26;
+const below=y<10;
+if(below)y=Math.min(el._sy+30,Math.max(H-ph-10,10));
+document.getElementById('popInner').style.transformOrigin=below?'50% 0%':'50% 100%';
+pop.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0)';
+}
+}
+}
+
+function animate(){
+const t=clock.getElapsedTime();
+
+if(cam.active){
+const k=Math.min((t-cam.start)/cam.dur,1);
+const e=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
+camera.position.lerpVectors(cam.fp,cam.tp,e);
+controls.target.lerpVectors(cam.ft,cam.tt,e);
+if(k>=1)cam.active=false;
+}
+controls.autoRotate=autoRotate&&!cam.active&&!interacting;
+
+animTrees.forEach(function(a){a.g.rotation.z=Math.sin(t*.8+a.phase)*.012;a.g.rotation.x=Math.cos(t*.7+a.phase)*.008});
+animDeer.forEach(function(a){a.head.rotation.z=-Math.max(0,Math.sin(t*.7+a.phase))*.55+Math.sin(t*1.9+a.phase)*.03});
+animBirds.forEach(function(a){
+a.g.position.y=a.baseY+Math.sin(t*1.6+a.phase)*.12;
+a.g.rotation.y=Math.sin(t*.5+a.phase)*.35;
+a.wings.forEach(function(w){w.m.rotation.x=w.s*Math.sin(t*10+a.phase)*.65});
+});
+if(sunObj){
+sunObj.rays.rotation.z=t*.15;
+const s=1+Math.sin(t*1.4)*.08;
+sunObj.glow.scale.setScalar(s);
+}
+if(waterMat){waterMat.opacity=.86+Math.sin(t*1.2)*.04}
+ripples.forEach(function(r){
+const p=(t*.35+r.off)%1;
+r.m.scale.setScalar(.35+p*1.3);
+r.m.material.opacity=(1-p)*.45;
+});
+if(pollen){
+pollen.rotation.y=t*.03;
+pollen.position.y=Math.sin(t*.5)*.12;
+}
+if(flowGroup&&flowGroup.visible){
+flowDots.forEach(function(d){d.mesh.position.copy(d.curve.getPoint((t*.14+d.off)%1))});
+}
+if(ringMesh&&ringCfg){
+ringMesh.scale.setScalar(ringCfg.size*(1+Math.sin(t*3)*.06));
+ringMesh.material.opacity=.55+Math.sin(t*3)*.25;
+if(ringCfg.billboard)ringMesh.quaternion.copy(camera.quaternion);
+}
+
+controls.update();
+renderer.render(scene,camera);
+updateHotspots();
+}
+
+function focusOn(id){
+const d=data[id];
+const tt=new THREE.Vector3().fromArray(d.focus);
+const dir=camera.position.clone().sub(controls.target).normalize();
+if(dir.y<.32){dir.y=.32;dir.normalize()}
+const tp=tt.clone().add(dir.multiplyScalar(d.dist));
+cam.fp=camera.position.clone();
+cam.ft=controls.target.clone();
+cam.tp=tp;
+cam.tt=tt;
+cam.start=clock.elapsedTime;
+cam.dur=1.2;
+cam.active=true;
+}
+
+function openPop(id){
+const d=data[id];
+const g=groups[d.group];
+pop.style.setProperty('--c',g.color);
+document.getElementById('popEmoji').textContent=d.emoji;
+document.getElementById('popTitle').textContent=d.title;
+document.getElementById('popGroup').textContent=g.label;
+document.getElementById('popText').textContent=d.short;
+pop.classList.remove('show');
+void pop.offsetWidth;
+pop.classList.add('show');
+popOpen=true;
+}
+
+function closePop(){
+popOpen=false;
+pop.classList.remove('show');
+}
+
+function selectTopic(id,opts){
+opts=opts||{};
+if(!data[id])return;
+selected=id;
+const d=data[id];
+const g=groups[d.group];
+discovered.add(id);
+document.getElementById('counter').textContent=String(ids.indexOf(id)+1).padStart(2,'0')+' / '+String(ids.length).padStart(2,'0');
+document.querySelectorAll('.topic').forEach(function(b){
+b.classList.toggle('selected',b.dataset.id===id);
+b.classList.toggle('seen',discovered.has(b.dataset.id)&&b.dataset.id!==id);
+});
+ids.forEach(function(k){if(hotspotEls[k])hotspotEls[k].classList.toggle('sel',k===id)});
+infoCard.style.setProperty('--c',g.color);
+infoCard.classList.remove('anim');
+void infoCard.offsetWidth;
+infoCard.classList.add('anim');
+document.getElementById('infoTitle').textContent=d.title;
+document.getElementById('infoSubtitle').textContent=d.subtitle;
+document.getElementById('infoDescription').textContent=d.description;
+document.getElementById('infoFact').textContent=d.fact;
+document.getElementById('statFound').textContent=discovered.size+'/'+ids.length;
+document.getElementById('progressBar').style.width=(discovered.size/ids.length*100)+'%';
+if(ringMesh)setRing(id);
+if(opts.silent)return;
+openPop(id);
+if(controls)focusOn(id);
+if(discovered.size===ids.length&&!completed){
+completed=true;
+showToast('🎉 สำรวจครบทุกองค์ประกอบแล้ว ลองเปิด “การถ่ายทอดพลังงาน” ดูสิ');
+}
+}
+
+function nextTopic(){
+selectTopic(ids[(ids.indexOf(selected)+1)%ids.length]);
+}
+
+function prevTopic(){
+selectTopic(ids[(ids.indexOf(selected)-1+ids.length)%ids.length]);
+}
+
+function resetCamera(){
+if(!camera)return;
+cam.fp=camera.position.clone();
+cam.ft=controls.target.clone();
+cam.tp=new THREE.Vector3(8,7,10);
+cam.tt=new THREE.Vector3(0,.5,0);
+cam.start=clock.elapsedTime;
+cam.dur=1;
+cam.active=true;
+showToast('รีเซ็ตมุมมองเรียบร้อย');
+}
+
+function toggleRotate(){
+autoRotate=!autoRotate;
+const btn=document.getElementById('rotateBtn');
+btn.classList.toggle('active',autoRotate);
+btn.textContent=autoRotate?'◉ หมุนอัตโนมัติ':'◉ หยุดหมุน';
+}
+
+function toggleFlow(){
+if(!flowGroup)return;
+flowOn=!flowOn;
+flowGroup.visible=flowOn;
+document.getElementById('flowBtn').classList.toggle('active',flowOn);
+showToast(flowOn?'แสดงทิศทางการถ่ายทอดพลังงานและสารอาหาร':'ซ่อนการถ่ายทอดพลังงาน');
+}
+
+function showToast(message,sticky){
+toast.textContent=message;
+toast.classList.add('show');
+clearTimeout(toastTimer);
+if(!sticky)toastTimer=setTimeout(function(){toast.classList.remove('show')},2200);
+}
+
+init();
+})();
+</script>
+</body>
+</html>
